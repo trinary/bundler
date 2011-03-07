@@ -122,6 +122,12 @@ module Bundler
       end
 
       def add_remote(source)
+        # JRuby ships SSL as a gem due to crypto laws. We need it to talk to any
+        # rubygems servers that are HTTPS. So we require it here.
+        if source.to_s =~ /^https/ && defined?(JRUBY_VERSION)
+          begin; require 'openssl'; rescue LoadError; end
+        end
+
         @remotes << normalize_uri(source)
       end
 
