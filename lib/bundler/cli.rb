@@ -309,13 +309,24 @@ module Bundler
       into the systemwide Rubygems repository.
     D
     def exec(*)
-      ARGV.delete("exec")
+      args = ARGV.dup
+      args.delete("exec")
+
+      # System mode allows you to exec non-ruby binaries.
+      # Not that I know why you would want to do that.
+      system = args.shift if args.first == "-s"
 
       Bundler.setup
 
       begin
-        # Run
-        Kernel.exec(*ARGV)
+        unless system
+          # Run the command, using the same ruby that invoked bundler
+          args = [Gem.ruby, "-S", *args]
+        end
+
+        # Run the command now that ENV is set up
+        Bundler.ui.debug args.join(" ")
+        Kernel.exec(*args)
       rescue Errno::EACCES
         Bundler.ui.error "bundler: not executable: #{ARGV.first}"
         exit 126
