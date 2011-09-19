@@ -14,7 +14,7 @@ module Bundler
       Bundler.rubygems.ui = UI::RGProxy.new(Bundler.ui)
     end
 
-    check_unknown_options!
+    check_unknown_options! :except => :exec
 
     default_task :install
     class_option "no-color", :type => :boolean, :banner => "Disable colorization in output"
@@ -333,14 +333,14 @@ module Bundler
       bundle exec you can require and call the bundled gems as if they were installed
       into the systemwide Rubygems repository.
     D
-    def exec(*)
-      ARGV.shift # remove "exec"
+    def exec(*args)
+      args.shift # remove "exec"
 
       Bundler.setup
 
       begin
         # Run
-        Kernel.exec(*ARGV)
+        Kernel.exec(*args)
       rescue Errno::EACCES
         Bundler.ui.error "bundler: not executable: #{ARGV.first}"
         exit 126
